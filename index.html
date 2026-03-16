@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Sistema Garçom</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+
+body{
+font-family: Arial;
+padding:20px;
+background:#f2f2f2;
+}
+
+h2{
+text-align:center;
+}
+
+input, select, button{
+width:100%;
+padding:10px;
+margin-top:10px;
+font-size:16px;
+}
+
+.produto{
+display:flex;
+justify-content:space-between;
+background:white;
+padding:10px;
+margin-top:5px;
+border-radius:5px;
+}
+
+.lista{
+margin-top:20px;
+}
+
+button{
+background:#28a745;
+color:white;
+border:none;
+border-radius:5px;
+}
+
+button:hover{
+background:#218838;
+}
+
+</style>
+</head>
+
+<body>
+
+<h2>Novo Pedido</h2>
+
+<label>Mesa</label>
+<input type="number" id="mesa">
+
+<label>Cliente</label>
+<input type="text" id="cliente">
+
+<label>Produto</label>
+<input type="text" id="produto">
+
+<button onclick="adicionarProduto()">Adicionar Produto</button>
+
+<div class="lista" id="lista"></div>
+
+<button onclick="gerarPDF()">Gerar PDF</button>
+
+<script>
+
+let produtos = JSON.parse(localStorage.getItem("produtosPedido")) || [];
+
+function salvarLocal(){
+localStorage.setItem("produtosPedido", JSON.stringify(produtos));
+}
+
+function adicionarProduto(){
+
+let produto = document.getElementById("produto").value;
+
+if(produto.trim()=="") return;
+
+produtos.push(produto);
+
+document.getElementById("produto").value="";
+
+salvarLocal();
+mostrarProdutos();
+
+}
+
+function mostrarProdutos(){
+
+let lista = document.getElementById("lista");
+
+lista.innerHTML="";
+
+produtos.forEach((p,i)=>{
+
+lista.innerHTML += `
+<div class="produto">
+<span>${p}</span>
+<button onclick="remover(${i})">X</button>
+</div>
+`;
+
+});
+
+}
+
+function remover(i){
+
+produtos.splice(i,1);
+
+salvarLocal();
+mostrarProdutos();
+
+}
+
+function gerarPDF(){
+
+const { jsPDF } = window.jspdf;
+
+let doc = new jsPDF();
+
+let mesa = document.getElementById("mesa").value;
+let cliente = document.getElementById("cliente").value;
+
+let y = 20;
+
+doc.setFontSize(18);
+doc.text("PEDIDO", 20, y);
+
+y+=10;
+
+doc.setFontSize(12);
+doc.text("Mesa: "+mesa,20,y);
+y+=8;
+
+doc.text("Cliente: "+cliente,20,y);
+y+=10;
+
+doc.text("Itens:",20,y);
+y+=8;
+
+produtos.forEach(p=>{
+
+doc.text("- "+p,20,y);
+y+=8;
+
+});
+
+y+=10;
+
+let data = new Date();
+
+doc.text("Horario: "+data.toLocaleTimeString(),20,y);
+
+doc.save("pedido_mesa_"+mesa+".pdf");
+
+}
+
+mostrarProdutos();
+
+</script>
+
+</body>
+</html>
